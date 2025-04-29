@@ -1,6 +1,8 @@
-from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_openai import ChatOpenAI
 from langchain_core.output_parsers import StrOutputParser
+from langchain.agents import AgentExecutor, create_openai_functions_agent
+from graph.tools import in_depth_deepen
 from models.question import Question
 from graph.graph_state import GraphState
 from typing import Dict, Any
@@ -12,6 +14,7 @@ import pandas as pd
 GENERATOR_MODEL = "gpt-4o-mini"
 RESPONSE_MODEL = "gpt-4o-mini"
 EVALUATOR_MODEL = "gpt-4.1-mini"
+EVOLVER_MODEL = "gpt-4o-mini"
 
 # Define the question generator node
 def questions_generator(state: GraphState) -> Dict[str, Any]:
@@ -146,8 +149,34 @@ def question_evaluator(state: GraphState) -> Dict[str, Any]:
 
 def question_evolver(state: GraphState) -> Dict[str, Any]:
     """Create variants of a question."""
-    state.current_question.update_stage("EVOLVE")
-    return state
+
+    llm = ChatOpenAI(model=EVOLVER_MODEL)
+    tools = [in_depth_deepen]
+
+    system_prompt = ("Using the context provided below, select one of the tools available to you to create a variant of the question:\n"
+    "CONTEXT:\n"
+    "{context}\n\n"    
+    "QUESTION:\n"
+    "{question}\n"
+    "Do not ask for clarification.")
+
+    prompt = ChatPromptTemplate.from_messages([
+        ("system", system_prompt),
+        MessagesPlaceholder(variable_name="agent_scratchpad"),
+    ])
+    agent = create_openai_functions_agent(llm, tools, prompt)
+    executor = AgentExecutor(agent=agent, tools=tools)
+    try:
+        response = executor.invoke({"question": state.current_question.question_text, "context": state.docs})
+        print("\n\n")
+        print(f"Parent question: {state.current_question.question_text}")
+        print(f"New question: {response.get('output')}")
+        print("\n\n")
+        state.current_question.update_stage("EVOLVE")
+        return state
+    except Exception as e:
+        state.error = str(e)
+        return {"error": state.error}
 
 def question_reporter(state: GraphState) -> Dict[str, Any]:
     """Generate a report of the question."""
