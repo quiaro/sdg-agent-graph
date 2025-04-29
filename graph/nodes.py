@@ -4,9 +4,14 @@ from langchain_core.output_parsers import StrOutputParser
 from models.question import Question
 from graph.graph_state import GraphState
 from typing import Dict, Any
+from ragas import evaluate, EvaluationDataset, RunConfig
+from ragas.metrics import Faithfulness, ResponseRelevancy
+from ragas.llms import LangchainLLMWrapper
+import pandas as pd
 
 GENERATOR_MODEL = "gpt-4o-mini"
 RESPONSE_MODEL = "gpt-4o-mini"
+EVALUATOR_MODEL = "gpt-4.1-mini"
 
 # Define the question generator node
 def questions_generator(state: GraphState) -> Dict[str, Any]:
@@ -107,6 +112,35 @@ def response_generator(state: GraphState) -> Dict[str, Any]:
 
 def question_evaluator(state: GraphState) -> Dict[str, Any]:
     """Evaluate the response to the question."""
+
+    custom_run_config = RunConfig(timeout=360)
+    evaluator_llm = LangchainLLMWrapper(ChatOpenAI(model=EVALUATOR_MODEL))
+    context_docs = [doc.page_content for doc in state.docs]
+    # Prepare the data for evaluation
+    dataset = [
+        {
+            "user_input": state.current_question.question_text,
+            "response": state.current_question.response_text,
+            "reference_contexts": context_docs,
+            "retrieved_contexts": context_docs,
+        }
+    ]
+    evaluation_dataset = EvaluationDataset.from_dict(dataset)
+
+    # Evaluate using RAGAS metrics
+    result = evaluate(
+        evaluation_dataset,
+        metrics=[Faithfulness(), ResponseRelevancy()],
+        llm=evaluator_llm,
+        run_config=custom_run_config
+    )
+
+    # Update the question with evaluation results
+    state.current_question.evaluate_response(
+        faithfulness=result['faithfulness'][0],
+        response_relevancy=result['answer_relevancy'][0]
+    )
+
     state.current_question.update_stage("EVALUATE")
     return state
 
