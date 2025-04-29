@@ -31,10 +31,10 @@ class Difficulty(BaseModel):
         return v
 
 class Evaluation(BaseModel):
-    complexity_added: bool = False
+    complexity_added: bool = True
     faithfulness: float = 0.0
     response_relevancy: float = 0.0
-    outcome: Literal["NONE", "accept", "reject"] = "NONE"
+    outcome: Literal["accept", "reject"] = "accept"
 
     @field_validator('faithfulness')
     @classmethod
