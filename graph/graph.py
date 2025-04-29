@@ -1,5 +1,5 @@
 from langgraph.graph import StateGraph
-from graph.nodes import node_question_generator
+from graph.nodes import questions_generator
 from graph.graph_state import GraphState
 
 # Create and configure the graph
@@ -9,7 +9,7 @@ def create_graph() -> StateGraph:
     workflow = StateGraph(GraphState)
 
     # Add the question generator node
-    workflow.add_node("QuestionGenerator", node_question_generator)
+    workflow.add_node("QuestionGenerator", questions_generator)
 
     # Define the conditional edges
     def router(state: GraphState) -> str:
