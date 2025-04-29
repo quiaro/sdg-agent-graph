@@ -37,3 +37,19 @@ def questions_generator(state: GraphState) -> Dict[str, Any]:
     except Exception as e:
         state.error = str(e)
         return {"error": state.error}
+
+def questions_router(state: GraphState) -> Dict[str, Any]:
+    """Route to next node or end based on state."""
+    if state.error:
+        return state
+
+    # If current_question is not defined or is DONE, find next question
+    if not state.current_question or state.current_question.stage == "DONE":
+        for question in state.questions:
+            if question.stage != "DONE":
+                state.current_question = question
+                break
+    
+    state.next_step = "DONE"
+
+    return state

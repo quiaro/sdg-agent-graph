@@ -65,6 +65,7 @@ class Question(BaseModel):
     faithfulness_threshold: float = 0.8  # default 80%
     relevancy_threshold: float = 0.8     # default 80%
 
+    stage: Literal["SEED", "RESPONSE", "EVALUATE_RESPONSE", "EVOLVE", "EVALUATE_COMPLEXITY", "REPORT", "DONE"] = "SEED"
     question_id: str = Field(default_factory=lambda: str(uuid4()))
     question_text: str = ""
     response_text: str = ""
