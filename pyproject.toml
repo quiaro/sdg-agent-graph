@@ -1,0 +1,10 @@
+[project]
+name = "sdg-agent-graph"
+version = "0.1.0"
+description = "Generate synthetic questions and answers from a corpus through an agent graph"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "langchain-community>=0.3.23",
+    "unstructured>=0.17.2",
+]
