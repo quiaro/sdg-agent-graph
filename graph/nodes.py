@@ -5,6 +5,8 @@ from models.question import Question
 from graph.graph_state import GraphState
 from typing import Dict, Any
 
+GENERATOR_MODEL = "gpt-4o-mini"
+
 # Define the question generator node
 def questions_generator(state: GraphState) -> Dict[str, Any]:
     """Generate simple questions based on documents in the graph state."""
@@ -16,7 +18,7 @@ def questions_generator(state: GraphState) -> Dict[str, Any]:
     Generate {num_questions} simple random questions about the context provided. Do not use any other knowledge than the context provided. The generated questions should be easy to answer and must not exceed 8 words. The questions will be separated by newlines and will not be numbered.
     """
     chain_prompt = ChatPromptTemplate.from_template(PROMPT)
-    openai_chat_model = ChatOpenAI(model="gpt-4o-mini")
+    openai_chat_model = ChatOpenAI(model=GENERATOR_MODEL)
 
     def get_prompt_variables(state: GraphState):
         # Join all document contents into a single string
