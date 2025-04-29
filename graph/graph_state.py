@@ -6,7 +6,7 @@ from models.question import Question
 class GraphState(BaseModel):
     docs: List[Document] = Field(default_factory=list)
     questions: List[Question] = Field(default_factory=list)
-    current_question: Question = Field(default_factory=Question)
+    current_question: Question | None = None
     num_questions: int = 1
-    next_step: Literal["SEED", "RESPONSE", "EVALUATE_RESPONSE", "EVOLVE", "EVALUATE_COMPLEXITY", "REPORT", "DONE"] = "RESPONSE"
+    next_step: Literal["RESPONSE", "EVALUATE", "EVOLVE", "REPORT", "DONE"] = "RESPONSE"
     error: str = ""

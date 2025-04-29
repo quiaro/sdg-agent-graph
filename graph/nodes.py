@@ -35,7 +35,7 @@ def questions_generator(state: GraphState) -> Dict[str, Any]:
             question = Question()
             question.update_question(question_text)
             state.questions.append(question)
-        return {"questions": state.questions}
+        return state
     except Exception as e:
         state.error = str(e)
         return {"error": state.error}
@@ -46,23 +46,52 @@ def questions_router(state: GraphState) -> Dict[str, Any]:
         return state
 
     # If current_question is not defined or is DONE, find next question
-    if not state.current_question or state.current_question.stage == "DONE":
+    if not state.current_question or state.current_question.stage == "REPORT":
         for question in state.questions:
-            if question.stage != "DONE":
+            if question.stage != "REPORT":
                 state.current_question = question
                 break
     
-    if state.current_question.stage == "DONE":
-        # If the current question is marked as DONE, this means all questions 
-        # have already been processed. Set the next step to DONE to signal 
-        # the end of the workflow
-        state.next_step = "DONE"
+    if state.current_question.stage == "REPORT":
+        # If the current question is marked as REPORT, this means all questions 
+        # have already been processed and included in the report. Set the next 
+        # step to DONE to signal the end of the workflow.
+        state.next_step = "DONE"    
     elif state.current_question.stage == "SEED":
+        # If the current question is marked as SEED, this means the question
+        # has just started the workflow. Set the next step to RESPONSE to 
+        # generate a response to the question.
         state.next_step = "RESPONSE"
-
+    elif state.current_question.stage == "RESPONSE":
+        # If the current question is marked as RESPONSE, this means the question
+        # has been responded to. Set the next step to EVALUATE to evaluate the 
+        # question's response.
+        state.next_step = "EVALUATE"
+    elif state.current_question.stage == "EVALUATE":
+        if state.current_question.evaluation.outcome == "accept":
+            state.next_step = "EVOLVE"  
+        else:
+            state.next_step = "REPORT"  
+    elif state.current_question.stage == "EVOLVE":
+        state.next_step = "REPORT"
     return state
 
 def response_generator(state: GraphState) -> Dict[str, Any]:
     """Generate a response to the question."""
-    state.current_question.update_stage("DONE")
+    state.current_question.update_stage("RESPONSE")
+    return state
+
+def question_evaluator(state: GraphState) -> Dict[str, Any]:
+    """Evaluate the response to the question."""
+    state.current_question.update_stage("EVALUATE")
+    return state
+
+def question_evolver(state: GraphState) -> Dict[str, Any]:
+    """Create variants of a question."""
+    state.current_question.update_stage("EVOLVE")
+    return state
+
+def question_reporter(state: GraphState) -> Dict[str, Any]:
+    """Generate a report of the question."""
+    state.current_question.update_stage("REPORT")
     return state

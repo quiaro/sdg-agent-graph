@@ -65,7 +65,7 @@ class Question(BaseModel):
     faithfulness_threshold: float = 0.8  # default 80%
     relevancy_threshold: float = 0.8     # default 80%
 
-    stage: Literal["SEED", "RESPONSE", "EVALUATE_RESPONSE", "EVOLVE", "EVALUATE_COMPLEXITY", "REPORT", "DONE"] = "SEED"
+    stage: Literal["SEED", "RESPONSE", "EVALUATE", "EVOLVE", "REPORT"] = "SEED"
     question_id: str = Field(default_factory=lambda: str(uuid4()))
     question_text: str = ""
     response_text: str = ""
@@ -120,6 +120,6 @@ class Question(BaseModel):
         """Attach a generated response."""
         self.response_text = response_text
 
-    def update_stage(self, stage: Literal["SEED", "RESPONSE", "EVALUATE_RESPONSE", "EVOLVE", "EVALUATE_COMPLEXITY", "REPORT", "DONE"]):
+    def update_stage(self, stage: Literal["SEED", "RESPONSE", "EVALUATE", "EVOLVE","REPORT"]):
         """Update the stage of the question."""
         self.stage = stage
