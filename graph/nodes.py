@@ -6,6 +6,7 @@ from graph.graph_state import GraphState
 from typing import Dict, Any
 
 GENERATOR_MODEL = "gpt-4o-mini"
+RESPONSE_MODEL = "gpt-4o-mini"
 
 # Define the question generator node
 def questions_generator(state: GraphState) -> Dict[str, Any]:
@@ -18,14 +19,14 @@ def questions_generator(state: GraphState) -> Dict[str, Any]:
     Generate {num_questions} simple random questions about the context provided. Do not use any other knowledge than the context provided. The generated questions should be easy to answer and must not exceed 8 words. The questions will be separated by newlines and will not be numbered.
     """
     chain_prompt = ChatPromptTemplate.from_template(PROMPT)
-    openai_chat_model = ChatOpenAI(model=GENERATOR_MODEL)
+    chat_model = ChatOpenAI(model=GENERATOR_MODEL)
 
     def get_prompt_variables(state: GraphState):
         # Join all document contents into a single string
         context = "\n".join([doc.page_content for doc in state.docs])
         return {"context": context, "num_questions": state.num_questions}
 
-    chain = chain_prompt | openai_chat_model | StrOutputParser()
+    chain = chain_prompt | chat_model | StrOutputParser()
 
     try:
         questions_str = chain.invoke(get_prompt_variables(state))
@@ -78,8 +79,31 @@ def questions_router(state: GraphState) -> Dict[str, Any]:
 
 def response_generator(state: GraphState) -> Dict[str, Any]:
     """Generate a response to the question."""
-    state.current_question.update_stage("RESPONSE")
-    return state
+
+    PROMPT = """
+    CONTEXT:
+    {context}
+
+    {question}\nAnswer the question as accurately as possible using only the context provided.
+    """
+    chain_prompt = ChatPromptTemplate.from_template(PROMPT)
+    chat_model = ChatOpenAI(model=RESPONSE_MODEL)
+
+    def get_prompt_variables(state: GraphState):
+        # Join all document contents into a single string
+        context = "\n".join([doc.page_content for doc in state.docs])
+        return {"context": context, "question": state.current_question.question_text}
+
+    chain = chain_prompt | chat_model | StrOutputParser()
+
+    try:
+        answer = chain.invoke(get_prompt_variables(state))
+        state.current_question.update_response(answer)
+        state.current_question.update_stage("RESPONSE")
+        return state
+    except Exception as e:
+        state.error = str(e)
+        return {"error": state.error}
 
 def question_evaluator(state: GraphState) -> Dict[str, Any]:
     """Evaluate the response to the question."""
