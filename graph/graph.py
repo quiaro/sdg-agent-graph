@@ -1,9 +1,5 @@
-from typing import List
-from pydantic import BaseModel, Field
-from langchain_core.documents import Document
 from langgraph.graph import StateGraph
-from models.question import Question
-from graph.nodes import question_generator
+from graph.nodes import node_question_generator
 from graph.graph_state import GraphState
 
 # Create and configure the graph
@@ -13,7 +9,7 @@ def create_graph() -> StateGraph:
     workflow = StateGraph(GraphState)
 
     # Add the question generator node
-    workflow.add_node("QuestionGenerator", question_generator)
+    workflow.add_node("QuestionGenerator", node_question_generator)
 
     # Define the conditional edges
     def router(state: GraphState) -> str:

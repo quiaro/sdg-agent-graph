@@ -6,7 +6,7 @@ from graph.graph_state import GraphState
 from typing import Dict, Any
 
 # Define the question generator node
-def question_generator(state: GraphState) -> Dict[str, Any]:
+def node_question_generator(state: GraphState) -> Dict[str, Any]:
     """Generate questions based on input documents."""
     PROMPT = """
     CONTEXT:
