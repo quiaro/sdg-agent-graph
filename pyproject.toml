@@ -6,5 +6,6 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "langchain-community>=0.3.23",
+    "langgraph>=0.3.34",
     "unstructured>=0.17.2",
 ]
