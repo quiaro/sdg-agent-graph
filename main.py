@@ -1,5 +1,6 @@
 from langchain_community.document_loaders import DirectoryLoader
-from graph import create_graph, GraphState
+from graph.graph import create_graph
+from graph.graph_state import GraphState
 from utils.setup import setup
 
 # Call setup to initialize environment
