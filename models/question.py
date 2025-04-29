@@ -120,3 +120,6 @@ class Question(BaseModel):
         """Attach a generated response."""
         self.response_text = response_text
 
+    def update_stage(self, stage: Literal["SEED", "RESPONSE", "EVALUATE_RESPONSE", "EVOLVE", "EVALUATE_COMPLEXITY", "REPORT", "DONE"]):
+        """Update the stage of the question."""
+        self.stage = stage

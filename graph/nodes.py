@@ -52,6 +52,17 @@ def questions_router(state: GraphState) -> Dict[str, Any]:
                 state.current_question = question
                 break
     
-    state.next_step = "DONE"
+    if state.current_question.stage == "DONE":
+        # If the current question is marked as DONE, this means all questions 
+        # have already been processed. Set the next step to DONE to signal 
+        # the end of the workflow
+        state.next_step = "DONE"
+    elif state.current_question.stage == "SEED":
+        state.next_step = "RESPONSE"
 
+    return state
+
+def response_generator(state: GraphState) -> Dict[str, Any]:
+    """Generate a response to the question."""
+    state.current_question.update_stage("DONE")
     return state
